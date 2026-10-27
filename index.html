@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Handbuch des animistischen Volksglaubens</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#121110">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Handbuch">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+  @font-face { font-family: "EBG"; src: url("fonts/ebg-regular.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+  @font-face { font-family: "EBG"; src: url("fonts/ebg-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
+  @font-face { font-family: "EBG"; src: url("fonts/ebg-medium.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+  :root {
+    --nacht: #121110; --kohle: #1c1a17; --glut: #2b2824; --papier: #efe9dd; --pergament: #e6dcc6; --gedaempft: #a39784;
+    --rost: #c08552; --linie: rgba(230, 220, 198, 0.15); --leiste: rgba(20, 19, 17, 0.96);
+    --schrift: "EBG", "EB Garamond", Garamond, Georgia, serif;
+    color-scheme: dark;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; }
+  body {
+    background: var(--nacht); color: var(--pergament); font-family: var(--schrift);
+    -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  }
+  #buehne { position: fixed; left: 0; top: 0; touch-action: none; display: block; }
+  .ersatz { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+  .laden { position: fixed; inset: 0; display: grid; place-items: center; z-index: 1; font-style: italic; color: var(--gedaempft); font-size: 18px; pointer-events: none; }
+
+  /* Überlagerungen auf der ruhenden Seite */
+  #ueber { position: fixed; inset: 0; pointer-events: none; z-index: 3; }
+  .auswahl { position: absolute; background: rgba(192, 133, 82, 0.30); border-radius: 2px; }
+  .marke { position: absolute; background: rgba(214, 150, 70, 0.34); border-radius: 2px; animation: puls 1.6s ease-in-out 2; mix-blend-mode: multiply; }
+  .blitz { position: absolute; border-radius: 3px; background: rgba(192, 133, 82, 0.28); animation: blitz 0.42s ease-out forwards; }
+  @keyframes puls { 50% { background: rgba(214, 150, 70, 0.55); } }
+  @keyframes blitz { to { opacity: 0; } }
+  #band { position: fixed; z-index: 4; pointer-events: none; background: linear-gradient(90deg, #4c1410, #7a231d 35%, #6c1e19 60%, #4a130f);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 9px), 0 100%); box-shadow: 2px 2px 6px rgba(0,0,0,0.35); }
+
+  /* Bedienleisten */
+  .leiste {
+    position: fixed; left: 0; right: 0; z-index: 20;
+    padding-left: max(14px, env(safe-area-inset-left, 0px)); padding-right: max(14px, env(safe-area-inset-right, 0px));
+    background: var(--leiste); transition: opacity 0.22s ease, transform 0.22s ease; opacity: 0; pointer-events: none;
+  }
+  .oben { top: 0; transform: translateY(-100%); padding-top: calc(env(safe-area-inset-top, 0px) + 6px); padding-bottom: 6px; border-bottom: 1px solid var(--linie);
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 6px; }
+  .unten { bottom: 0; transform: translateY(100%); padding-top: 6px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); border-top: 1px solid var(--linie);
+    display: flex; flex-direction: column; gap: 2px; }
+  body.ui .leiste { opacity: 1; transform: none; pointer-events: auto; }
+  .kapitelname { text-align: center; font-variant: small-caps; letter-spacing: 0.06em; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .gruppe { display: flex; gap: 0; align-items: center; }
+  button {
+    font-family: var(--schrift); font-size: 16px; color: var(--pergament); background: transparent;
+    border: 1px solid transparent; border-radius: 3px; padding: 0 10px; height: 44px; min-width: 44px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--rost); outline-offset: 2px; }
+  button svg { width: 21px; height: 21px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  button[aria-pressed="true"] { color: var(--rost); }
+  #knopf-lz[aria-pressed="true"] svg { fill: currentColor; }
+  .knopftext { font-variant: small-caps; letter-spacing: 0.06em; }
+  .zeile { display: flex; align-items: center; gap: 6px; }
+  input[type="range"] { flex: 1; min-width: 0; height: 36px; background: transparent; -webkit-appearance: none; appearance: none; cursor: pointer; touch-action: pan-x; }
+  input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--linie); }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; margin-top: -9px; border-radius: 50%; background: var(--rost); border: 3px solid var(--nacht); }
+  input[type="range"]:disabled { opacity: 0.35; }
+  .standzeile { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 0 4px; }
+  .stand { font-style: italic; font-size: 14.5px; color: var(--gedaempft); font-variant-numeric: oldstyle-nums; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .uhr { font-size: 14px; color: var(--gedaempft); font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; letter-spacing: 0.02em; }
+
+  /* Seitenleiste mit Inhalt, Lesezeichen, Markierungen und Suche */
+  .schleier { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.55); opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+  body.toc .schleier, body.bogen .schleier { opacity: 1; pointer-events: auto; }
+  .inhalt {
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 31; width: min(440px, 100%);
+    background: var(--kohle); border-right: 1px solid var(--linie);
+    transform: translateX(-102%); transition: transform 0.3s cubic-bezier(.2, .7, .2, 1);
+    display: flex; flex-direction: column;
+  }
+  body.toc .inhalt { transform: none; }
+  .inhalt-kopf { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: calc(env(safe-area-inset-top, 0px) + 12px) 12px 10px max(20px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--linie); }
+  .inhalt-kopf h2 { margin: 0; font-weight: 500; font-size: 20px; font-variant: small-caps; letter-spacing: 0.08em; }
+  .liste { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 6px 0 calc(env(safe-area-inset-bottom, 0px) + 18px); touch-action: pan-y; }
+  .eintrag {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: baseline; width: 100%;
+    text-align: left; height: auto; min-height: 40px; border: 0; border-radius: 0; padding: 8px 20px 8px max(20px, env(safe-area-inset-left, 0px));
+    font-size: 16px; line-height: 1.3; color: var(--pergament);
+  }
+  .eintrag .s { color: var(--gedaempft); font-variant-numeric: oldstyle-nums; font-size: 15px; }
+  .eintrag.e0 { margin-top: 12px; font-size: 18px; font-weight: 500; }
+  .eintrag.e0 .t[data-k]::before { content: attr(data-k); display: block; font-size: 13px; font-weight: 400; font-variant: small-caps; letter-spacing: 0.1em; color: var(--rost); margin-bottom: 1px; }
+  .eintrag.e1 { padding-left: max(34px, calc(env(safe-area-inset-left, 0px) + 14px)); }
+  .eintrag.e2 { padding-left: max(48px, calc(env(safe-area-inset-left, 0px) + 28px)); font-size: 15px; font-style: italic; color: #d4c8b0; min-height: 34px; padding-top: 5px; padding-bottom: 5px; }
+  .eintrag.hier { background: rgba(192, 133, 82, 0.13); }
+  .eintrag.hier .t { color: #f0d7b8; }
+  .suche { padding: 10px 14px 8px max(18px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--linie); }
+  .suche input { width: 100%; height: 44px; font-family: var(--schrift); font-size: 17px; color: var(--pergament); background: var(--nacht); border: 1px solid var(--linie); border-radius: 3px; padding: 0 12px; -webkit-user-select: text; user-select: text; }
+  .suche input::placeholder { color: var(--gedaempft); font-style: italic; }
+  .rubrik { font-variant: small-caps; letter-spacing: 0.1em; color: var(--rost); font-size: 14px; padding: 14px 20px 4px max(20px, env(safe-area-inset-left, 0px)); }
+  .treffer { display: block; width: 100%; text-align: left; height: auto; border: 0; border-radius: 0; padding: 9px 20px 10px max(20px, env(safe-area-inset-left, 0px)); font-size: 15px; line-height: 1.4; color: #d9ceb6; }
+  .treffer .s { display: block; font-size: 13px; font-variant: small-caps; letter-spacing: 0.06em; color: var(--rost); margin-bottom: 2px; }
+  .treffer mark { background: rgba(192, 133, 82, 0.35); color: var(--pergament); padding: 0 1px; }
+  .mk-text { display: block; font-style: italic; }
+  .mk-notiz { display: block; margin-top: 4px; padding-left: 10px; border-left: 2px solid var(--rost); color: var(--pergament); }
+  .lz { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .lz .eintrag { min-height: 44px; }
+  .lz .weg { color: var(--gedaempft); margin-right: 8px; }
+
+  /* Einstellungen als Bogen von unten */
+  .einst {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 31; max-height: 86vh; overflow-y: auto; overscroll-behavior: contain;
+    background: var(--kohle); border-top: 1px solid var(--linie); border-radius: 10px 10px 0 0;
+    padding: 6px max(18px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 14px) max(18px, env(safe-area-inset-left, 0px));
+    transform: translateY(102%); transition: transform 0.3s cubic-bezier(.2, .7, .2, 1);
+  }
+  body.bogen .einst { transform: none; }
+  .einst .griff { width: 40px; height: 4px; border-radius: 2px; background: var(--linie); margin: 4px auto 6px; }
+  .einst h2 { margin: 14px 0 4px; font-weight: 400; font-size: 14px; font-variant: small-caps; letter-spacing: 0.1em; color: var(--rost); }
+  .reihe { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 48px; font-size: 16.5px; }
+  .reihe > span { flex: none; }
+  .reihe > span.dehnbar { flex: 1; min-width: 0; }
+  .reihe input[type="range"] { max-width: 60%; }
+  .wahl { display: inline-flex; border: 1px solid var(--linie); border-radius: 4px; overflow: hidden; }
+  .wahl button { height: 36px; border: 0; border-radius: 0; padding: 0 11px; font-size: 15px; color: var(--gedaempft); }
+  .wahl button + button { border-left: 1px solid var(--linie); }
+  .wahl button[aria-pressed="true"] { background: rgba(192, 133, 82, 0.18); color: var(--pergament); }
+  .schalter { width: 50px; min-width: 50px; height: 30px; padding: 0; border-radius: 15px; background: rgba(230, 220, 198, 0.12); position: relative; border: 1px solid var(--linie); }
+  .schalter::after { content: ""; position: absolute; left: 3px; top: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--gedaempft); transition: transform 0.2s ease, background 0.2s ease; }
+  .schalter[aria-pressed="true"] { background: rgba(192, 133, 82, 0.35); }
+  .schalter[aria-pressed="true"]::after { transform: translateX(20px); background: var(--papier); }
+  .schalter.text { width: auto; min-width: 0; height: 34px; padding: 0 12px; border-radius: 4px; font-size: 14.5px; color: var(--gedaempft); }
+  .schalter.text::after { display: none; }
+  .schalter.text[aria-pressed="true"] { color: var(--pergament); }
+
+  /* Wortkarte */
+  .karte {
+    position: fixed; z-index: 35; background: #26231f; border: 1px solid rgba(230, 220, 198, 0.2); border-radius: 6px;
+    box-shadow: 0 10px 36px rgba(0, 0, 0, 0.55); padding: 12px 12px 8px; opacity: 0; transform: translateY(6px); transition: opacity 0.16s ease, transform 0.16s ease;
+  }
+  .karte.auf { opacity: 1; transform: none; }
+  .k-text { font-style: italic; font-size: 15.5px; line-height: 1.4; color: #e3d8c2; padding: 0 4px 8px; max-height: 6.5em; overflow: hidden; }
+  .k-glossar { border-top: 1px solid var(--linie); padding: 8px 4px; }
+  .k-begriff { font-variant: small-caps; letter-spacing: 0.08em; color: var(--rost); font-size: 15px; margin-bottom: 2px; }
+  .k-erkl { font-size: 15.5px; line-height: 1.42; }
+  .k-notiz { border-left: 2px solid var(--rost); padding: 2px 8px; margin: 2px 4px 8px; font-size: 15.5px; line-height: 1.4; white-space: pre-wrap; }
+  .karte textarea { width: 100%; min-height: 110px; resize: none; font-family: var(--schrift); font-size: 17px; color: var(--pergament); background: var(--nacht); border: 1px solid var(--linie); border-radius: 4px; padding: 8px 10px; -webkit-user-select: text; user-select: text; margin-bottom: 6px; }
+  .k-knoepfe { display: flex; flex-wrap: wrap; gap: 2px; border-top: 1px solid var(--linie); padding-top: 4px; }
+  .k-knoepfe button { font-size: 15.5px; padding: 0 9px; height: 40px; }
+  .k-knoepfe button.haupt { color: var(--rost); }
+
+  /* Begriffskarte */
+  .karte { max-height: 74vh; overflow-y: auto; overscroll-behavior: contain; }
+  .karte.ueber { z-index: 46; }
+  .b-art { font-variant: small-caps; letter-spacing: 0.1em; color: var(--rost); font-size: 13.5px; padding: 0 4px; }
+  .b-name { font-size: 21px; font-weight: 500; padding: 0 4px 2px; line-height: 1.22; }
+  .b-zusatz { font-style: italic; color: #d4c8b0; font-size: 15px; padding: 0 4px 8px; }
+  .b-zeilen { margin: 0; padding: 8px 4px 6px; border-top: 1px solid var(--linie); display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; font-size: 14.5px; line-height: 1.38; }
+  .b-zeilen dt { color: var(--gedaempft); font-variant: small-caps; letter-spacing: 0.04em; }
+  .b-zeilen dd { margin: 0; }
+  .b-erkl, .b-satz { border-top: 1px solid var(--linie); padding: 8px 4px; font-size: 15.5px; line-height: 1.42; }
+  .b-satz { font-style: italic; color: #e3d8c2; }
+  .b-fund { border-top: 1px solid var(--linie); padding: 8px 4px 8px; }
+  .b-fund-kopf { font-size: 13.5px; color: var(--gedaempft); margin-bottom: 7px; }
+  .b-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { height: 32px; min-width: 42px; padding: 0 10px; border: 1px solid var(--linie); border-radius: 16px; font-size: 14.5px; font-variant-numeric: oldstyle-nums; color: var(--pergament); }
+  .chip.hier { color: var(--rost); border-color: rgba(192, 133, 82, 0.5); }
+  .chip.mehr { color: var(--gedaempft); }
+
+  /* Galerie */
+  .galerie { position: fixed; inset: 0; z-index: 33; background: var(--kohle); display: flex; flex-direction: column; }
+  .galerie-raster { flex: 1; overflow-y: auto; overscroll-behavior: contain; display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 14px 10px; align-items: start;
+    padding: 14px max(14px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 20px) max(14px, env(safe-area-inset-left, 0px)); }
+  .g-bild { display: block; height: auto; padding: 0; border: 0; text-align: left; min-width: 0; }
+  .g-bild img { display: block; width: 100%; height: auto; border-radius: 2px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45); background: #2b2824; }
+  .g-bild span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 12.5px; font-style: italic; line-height: 1.3; color: var(--gedaempft); margin-top: 5px; }
+
+  /* Lesestand und Teilen */
+  .eintrag.gelesen .s::before { content: "✓"; margin-right: 7px; color: var(--rost); font-size: 13px; }
+  .eintrag.begonnen .s::before { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--rost); opacity: 0.75; margin-right: 8px; vertical-align: 2px; }
+  #knopf-galerie { margin-left: auto; }
+  .teilen-knopf { width: calc(100% - 28px); margin: 12px 14px 2px; justify-content: flex-start; border: 1px solid var(--linie); font-size: 15.5px; }
+
+  /* Bildbetrachter */
+  .betrachter { position: fixed; inset: 0; z-index: 40; touch-action: none; background: rgba(8, 7, 6, calc(0.96 - var(--zieh, 0) * 0.5)); opacity: 0; transition: opacity 0.25s ease; }
+  .betrachter.auf { opacity: 1; }
+  #b-rahmen { position: absolute; transform-origin: 0 0; will-change: transform; box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6); }
+  #b-rahmen img { display: block; width: 100%; height: 100%; max-width: none; -webkit-user-drag: none; }
+  #b-punkte { position: absolute; inset: 0; pointer-events: none; }
+  .punkt { position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; border: 1.5px solid rgba(122, 52, 24, 0.75); background: rgba(192, 133, 82, 0.22); box-shadow: 0 0 0 3px rgba(239, 230, 207, 0.35); }
+  .b-zur { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 52px); border: 1px solid var(--linie); background: rgba(28, 26, 23, 0.9); border-radius: 22px; padding: 0 16px; font-size: 15.5px; }
+  .b-unter { position: absolute; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); text-align: center; font-style: italic; font-size: 16px; color: #d9ceb6; padding: 0 24px; pointer-events: none; }
+
+  /* Hinweis und Meldung */
+  .hinweis { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 36px); transform: translate(-50%, 8px); z-index: 18; max-width: calc(100% - 40px);
+    text-align: center; font-style: italic; font-size: 16px; line-height: 1.45; color: #e6dcc6; background: rgba(20, 19, 17, 0.88); border: 1px solid var(--linie); border-radius: 6px; padding: 10px 16px;
+    opacity: 0; transition: opacity 0.5s ease, transform 0.5s ease; pointer-events: none; }
+  .hinweis.auf { opacity: 1; transform: translate(-50%, 0); }
+  .meldung { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 112px); transform: translate(-50%, 6px); z-index: 45; background: var(--leiste); border: 1px solid var(--linie);
+    padding: 10px 16px; border-radius: 4px; font-size: 16px; max-width: calc(100% - 32px); text-align: center; opacity: 0; transition: opacity 0.2s ease, transform 0.2s ease; pointer-events: none; }
+  .meldung.auf { opacity: 1; transform: translate(-50%, 0); }
+
+  html { background: #121110; }
+  .tor { position: fixed; inset: 0; z-index: 200; background: radial-gradient(ellipse at 50% 40%, #24211d 0%, var(--nacht) 70%); display: grid; place-items: center; padding: calc(env(safe-area-inset-top, 0px) + 24px) max(24px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 24px) max(24px, env(safe-area-inset-left, 0px)); }
+  .tor-innen { width: min(100%, 340px); display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center; }
+  .tor-titel { font-size: 27px; line-height: 1.22; color: var(--pergament); text-wrap: balance; }
+  .tor-zier { width: 120px; height: 9px; background: linear-gradient(var(--rost), var(--rost)) left 50% / 48px 1px no-repeat, linear-gradient(var(--rost), var(--rost)) right 50% / 48px 1px no-repeat; position: relative; }
+  .tor-zier::after { content: ""; position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; border: 1px solid var(--rost); transform: translate(-50%, -50%) rotate(45deg); }
+  .tor-unter { font-style: italic; color: var(--gedaempft); font-size: 16px; line-height: 1.4; margin-top: -4px; }
+  .tor form { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+  .tor input { width: 100%; height: 48px; font-family: var(--schrift); font-size: 18px; color: var(--pergament); background: rgba(0, 0, 0, 0.25); border: 1px solid var(--linie); border-radius: 4px; padding: 0 14px; text-align: center; -webkit-user-select: text; user-select: text; }
+  .tor input:focus { outline: none; border-color: var(--rost); }
+  .tor button { height: 46px; font-family: var(--schrift); font-size: 17px; font-variant: small-caps; letter-spacing: 0.08em; color: var(--nacht); background: var(--pergament); border: 0; border-radius: 4px; }
+  .tor button:disabled { opacity: 0.6; }
+  .tor-fehler { color: var(--rost); font-style: italic; font-size: 15.5px; }
+  .tor-hinweis { margin: 10px 0 0; font-size: 15px; line-height: 1.5; color: var(--gedaempft); border-top: 1px solid var(--linie); padding-top: 16px; }
+  .tor-hinweis b { font-weight: 500; color: var(--pergament); }
+  .vollbild-hinweis { position: fixed; z-index: 150; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 10px); width: min(92vw, 360px); padding: 11px 16px; background: var(--leiste); border: 1px solid var(--linie); border-radius: 6px; font-size: 15px; line-height: 1.4; text-align: center; color: var(--pergament); }
+</style>
+</head>
+<body>
+<div class="tor" id="tor" hidden>
+  <div class="tor-innen">
+    <div class="tor-titel">Handbuch des animistischen Volksglaubens</div>
+    <div class="tor-zier"></div>
+    <div class="tor-unter">Privatausgabe</div>
+    <form id="tor-form" autocomplete="on">
+      <input id="tor-pw" type="password" name="password" autocomplete="current-password" placeholder="Passwort" aria-label="Passwort" enterkeyhint="go">
+      <button id="tor-knopf" type="submit">Öffnen</button>
+    </form>
+    <div class="tor-fehler" id="tor-fehler" hidden>Das Passwort stimmt nicht.</div>
+    <p class="tor-hinweis" id="tor-hinweis" hidden>Für das Vollbild in Safari auf <b>Teilen</b> tippen und <b>Zum Home-Bildschirm</b> wählen. Danach das Buch über das neue Symbol öffnen.</p>
+  </div>
+</div>
+<div class="vollbild-hinweis" id="vollbild-hinweis" hidden>Für das Vollbild: <b>Teilen</b> → <b>Zum Home-Bildschirm</b></div>
+
+<div class="laden" id="laden"></div>
+<canvas id="buehne" aria-label="Buch"></canvas>
+<div id="ueber"></div>
+<div id="band" hidden></div>
+
+<header class="leiste oben">
+  <button id="knopf-inhalt" aria-label="Inhalt, Lesezeichen und Suche"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h11"/></svg><span class="knopftext">Inhalt</span></button>
+  <div class="kapitelname" id="kapitelname">Handbuch</div>
+  <div class="gruppe">
+    <button id="knopf-lz" aria-pressed="false" aria-label="Lesezeichen setzen"><svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg></button>
+    <button id="knopf-einst" aria-label="Leseeinstellungen"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
+  </div>
+</header>
+
+<footer class="leiste unten">
+  <div class="zeile">
+    <button id="zurueck" aria-label="Zurückblättern"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <input type="range" id="regler" min="1" max="2" value="1" aria-label="Seite wählen">
+    <button id="vor" aria-label="Weiterblättern"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  </div>
+  <div class="standzeile"><div class="stand" id="stand" aria-live="polite"></div><div class="uhr" id="uhr"></div></div>
+</footer>
+
+<div class="schleier" id="schleier"></div>
+<aside class="inhalt" id="inhalt" aria-label="Inhaltsverzeichnis">
+  <div class="inhalt-kopf">
+    <h2>Inhalt</h2>
+    <button id="knopf-galerie" aria-label="Bildergalerie"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="1"/><path d="M3.5 16l5-5 4 4 3-3 5 5"/><circle cx="15.5" cy="9.5" r="1.4"/></svg><span class="knopftext">Bilder</span></button>
+    <button id="knopf-zu" aria-label="Schließen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="suche"><input id="suchfeld" type="search" placeholder="Im Buch suchen …" autocomplete="off" enterkeyhint="search" aria-label="Im Buch suchen"></div>
+  <div class="liste" id="ergebnisse" hidden></div>
+  <nav class="liste" id="verzeichnis"><div id="lz-liste"></div><div id="mk-liste"></div><div class="rubrik">Inhalt</div><div id="liste"></div></nav>
+</aside>
+
+<section class="einst" id="einstellungen" aria-label="Leseeinstellungen">
+  <div class="griff"></div>
+  <h2>Licht</h2>
+  <div class="reihe"><span>Seiten</span><div class="wahl" data-e="nacht"><button data-w="aus">Tag</button><button data-w="an">Nacht</button><button data-w="auto">Abends</button></div></div>
+  <label class="reihe"><span>Warmes Licht</span><input type="range" id="e-warm" min="0" max="1" step="0.01"></label>
+  <div class="reihe"><span>Helligkeit</span><input type="range" id="e-hell" min="0" max="1" step="0.01"><button class="schalter text" id="e-hell-auto">Wie System</button></div>
+  <h2>Klang und Gefühl</h2>
+  <div class="reihe"><span>Papiergeräusch</span><button class="schalter" data-s="klang" aria-label="Papiergeräusch"></button></div>
+  <div class="reihe"><span>Vibration</span><button class="schalter" data-s="vib" aria-label="Vibration"></button></div>
+  <div class="reihe"><span>Im Hintergrund</span><div class="wahl" data-e="umgebung"><button data-w="aus">Stille</button><button data-w="feuer">Kaminfeuer</button><button data-w="regen">Regen</button></div></div>
+  <label class="reihe" id="umg-laut-reihe"><span>Lautstärke</span><input type="range" id="e-umg" min="0" max="1" step="0.01"></label>
+  <div class="reihe" id="reihe-tasten"><span>Mit den Lautstärketasten blättern</span><button class="schalter" data-s="tasten" aria-label="Lautstärketasten"></button></div>
+  <div id="gruppe-offline" hidden>
+    <h2>Unterwegs</h2>
+    <div class="reihe"><span class="dehnbar" id="offline-text">Ganzes Buch offline speichern</span><button class="schalter text" id="offline-knopf">Speichern</button></div>
+  </div>
+</section>
+
+<div class="karte" id="wortkarte" hidden>
+  <div class="k-text" id="k-text"></div>
+  <div class="k-glossar" id="k-glossar" hidden><div class="k-begriff"></div><div class="k-erkl"></div></div>
+  <div class="k-notiz" id="k-notiz" hidden></div>
+  <div id="k-begriff" hidden></div>
+  <textarea id="k-eingabe" hidden placeholder="Notiz …" aria-label="Notiz"></textarea>
+  <div class="k-knoepfe" id="k-knoepfe"></div>
+</div>
+
+<div class="betrachter" id="betrachter" hidden>
+  <div id="b-rahmen"><img id="b-bild" alt="" draggable="false"><div id="b-punkte"></div></div>
+  <div class="b-unter" id="b-unter"></div>
+  <button class="b-zur" id="b-zur" hidden><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Zur Seite</button>
+</div>
+
+<div class="galerie" id="galerie" hidden>
+  <div class="inhalt-kopf"><h2>Bilder</h2><button id="galerie-zu" aria-label="Schließen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="galerie-raster" id="galerie-raster"></div>
+</div>
+
+<div class="hinweis" id="hinweis" hidden>Ecke greifen und ziehen oder rechts tippen.<br>Mitte: Übersicht · lange drücken: Namen, Begriffe, Markieren</div>
+<div class="meldung" id="meldung" hidden></div>
+
+<script src="inhalt.js"></script>
+<script src="tor.js"></script>
+</body>
+</html>
