@@ -59,6 +59,7 @@
     $('tor').hidden = true;
     await SCHUTZ.skript('meta.js');
     for (const s of ['klang.js', 'blatt.js', 'leser.js']) await laden(s);
+    for (const s of window.ZUSATZ || []) { if (s[0] === '#') await SCHUTZ.skript(s.slice(1)); else await laden(s); }
     offlineEinrichten();
     if (apple && !vollbild) hinweisZeigen();
   }

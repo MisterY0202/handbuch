@@ -9,6 +9,9 @@
   const brueck = (f, ...a) => { try { if (BR && BR[f]) return BR[f](...a); } catch (e) {} return undefined; };
   const merke = (k, v) => { try { localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); } catch (e) {} };
   const hole = (k, std) => { try { const v = localStorage.getItem(k); return v == null ? std : JSON.parse(v); } catch (e) { return std; } };
+  // Erweiterungen (Labor) hören auf Ereignisse und zeichnen eigene Marken auf die Seite
+  const horcher = {}, zusatzMarken = [];
+  const sende = (ev, d) => { for (const f of horcher[ev] || []) { try { f(d); } catch (e) { console.warn(e); } } };
   const klemme = (v, a, b) => Math.max(a, Math.min(b, v));
   const glatt = (a, b, x) => { const t = klemme((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   const zufall = (a, b) => a + Math.random() * (b - a);
@@ -782,6 +785,7 @@
     ueberlagerung();
     const s = sichtbareSeiten();
     merke('handbuch-lesestelle', { modus, seite: s[s.length - 1] + 1 });
+    sende('seite');
   }
 
   // ---------- Gesten ----------
@@ -815,6 +819,7 @@
 
   canvas.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
+    sende('beruehrung');
     K.start();
     wachAuffrischen();
     if (oeffnung) { if (!oeffnung.lauf) oeffnen(); return; }
@@ -1608,7 +1613,7 @@
   // Überlagerungen (Suchtreffer, Vorlesemarke) über der ruhenden Seite
   function ueberlagerung() {
     const u = $('ueber');
-    u.querySelectorAll('.marke, .vorlese').forEach((d) => d.remove());
+    u.querySelectorAll('.marke, .vorlese, .zusatz').forEach((d) => d.remove());
     const verdeckt = blaetter.length || oeffnung || UE.offen || UE.anim;
     u.style.visibility = verdeckt ? 'hidden' : 'visible';
     if (verdeckt) return;
@@ -1625,6 +1630,8 @@
       }
     };
     if (suchMarke) setze(suchMarke.i, suchMarke.a, suchMarke.b, 'marke');
+    const sicht = sichtbareSeiten();
+    for (const z of zusatzMarken) if (sicht.includes(z.i)) setze(z.i, z.a, z.b, 'zusatz ' + z.kl);
     auswahlZeichnen();
   }
 
@@ -1803,7 +1810,7 @@
   function bogenZu() { body.classList.remove('bogen'); }
   $('knopf-einst').addEventListener('click', () => { if (body.classList.contains('bogen')) bogenZu(); else bogenAuf(); });
   function einstellungenZeigen() {
-    document.querySelectorAll('.wahl').forEach((w) => {
+    document.querySelectorAll('.wahl[data-e]').forEach((w) => {
       const k = w.dataset.e;
       w.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(E[k]) === b.dataset.w ? 'true' : 'false'));
     });
@@ -1816,7 +1823,7 @@
     $('umg-laut-reihe').hidden = E.umgebung === 'aus';
     $('reihe-tasten').hidden = !BR;
   }
-  document.querySelectorAll('.wahl').forEach((w) => w.addEventListener('click', (e) => {
+  document.querySelectorAll('.wahl[data-e]').forEach((w) => w.addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
     const k = w.dataset.e;
     E[k] = b.dataset.w; speichereE(); einstellungenZeigen(); anwenden();
@@ -1842,6 +1849,7 @@
     K.an = E.klang;
     if (E.umgebung !== 'aus') K.start();
     K.umgebung(E.umgebung, E.umgLaut);
+    sende('einstellungen');
     brueck('lautTasten', !!E.tasten);
     helligkeit();
     anstossen();
@@ -1984,4 +1992,19 @@
   vorladen();
   anstossen();
   window.addEventListener('error', (e) => { try { console.warn('Fehler', e.message); } catch (x) {} });
+
+  // ---------- Schnittstelle für Erweiterungen ----------
+  window.LESER = {
+    an(ev, f) { (horcher[ev] = horcher[ev] || []).push(f); },
+    get pos() { return pos; }, get modus() { return modus; }, get A() { return A; }, get wpm() { return wpm; },
+    get offen() { return !oeffnung; }, get uebersicht() { return UE.offen; },
+    get ruhig() { return !(blaetter.length || oeffnung || UE.offen || UE.anim); },
+    M, E, K, AUS, body,
+    sichtbar: () => sichtbareSeiten(),
+    gehe(i) { sprungVerlauf.push(pos); schliesseInhalt(); gehe(seiteZuPos(i)); },
+    wortzahl, seiteInfo, umrechnen, kapitelVon, ui, melde, schliesseInhalt,
+    betrachter: (q, seite) => betrachterOeffnen(q, null, seite),
+    marken: zusatzMarken,
+    zeichne: () => ueberlagerung(),
+  };
 })();

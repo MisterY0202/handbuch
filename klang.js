@@ -357,11 +357,78 @@
       this.umgebungArt = art; if (laut != null) this.umgebungLaut = laut;
       if (!this.ctx) return;
       const c = this.ctx, t = c.currentTime;
-      this.umgBus.gain.setTargetAtTime(art === 'aus' || this.stumm() ? 0 : 0.5 * this.umgebungLaut, t, 0.4);
-      if (this._umg && this._umg.art === art) return;
-      if (this._umg) { const alt = this._umg; this._umg = null; alt.ende(); }
-      if (art === 'feuer') this._umg = this._feuer();
-      else if (art === 'regen') this._umg = this._regen();
+      if (this._umgWechsel) return;
+      if (this._umg && this._umg.art === art) { this.umgBus.gain.setTargetAtTime(this._umgZiel(), t, 0.4); return; }
+      if (this._umg) {
+        // erst ausblenden, dann den neuen Raum einblenden
+        this.umgBus.gain.setTargetAtTime(0, t, 0.3);
+        this._umgWechsel = setTimeout(() => { this._umgWechsel = null; const alt = this._umg; this._umg = null; if (alt) alt.ende(); this._umgStarten(); }, 1300);
+      } else this._umgStarten();
+    }
+    _umgZiel() { return this.umgebungArt === 'aus' || this.stumm() ? 0 : 0.5 * this.umgebungLaut; }
+    _umgStarten() {
+      const art = this.umgebungArt;
+      const erzeuger = { feuer: this._feuer, regen: this._regen, wasser: this._wasser, wind: this._wind, wald: this._wald, feld: this._feld, berg: this._berg }[art];
+      if (erzeuger && !this._umg) this._umg = erzeuger.call(this);
+      this.umgBus.gain.setTargetAtTime(this._umgZiel(), this.ctx.currentTime, 0.7);
+    }
+    // Klangräume für das Labor: Bach, Wind, Laub, Sommerfeld, Berg
+    _wasser() {
+      const c = this.ctx;
+      const tief = this._schleife(this.braun, [['lowpass', 520, 0.5]], 0.30);
+      const band = this._schleife(this.rosa, [['bandpass', 1300, 0.9]], 0.05);
+      let lauf = true;
+      const gluck = () => { if (!lauf) return; band.g.gain.setTargetAtTime(zufall(0.02, 0.08), c.currentTime, 0.07); setTimeout(gluck, zufall(90, 260)); };
+      gluck();
+      const blase = () => { if (!lauf) return; this._umgSchnipsel(0.004, zufall(0.015, 0.04), zufall(700, 1500), zufall(-0.5, 0.5), c.currentTime + 0.02); setTimeout(blase, -Math.log(1 - Math.random()) * 800); };
+      blase();
+      return { art: 'wasser', ende: () => { lauf = false; tief.q.stop(); band.q.stop(); } };
+    }
+    _wind() {
+      const c = this.ctx;
+      const luft = this._schleife(this.rosa, [['bandpass', 420, 0.7]], 0.18);
+      const tief = this._schleife(this.braun, [['lowpass', 200]], 0.14);
+      let lauf = true;
+      const boe = () => { if (!lauf) return; luft.g.gain.setTargetAtTime(zufall(0.06, 0.28), c.currentTime, zufall(0.8, 2)); setTimeout(boe, zufall(1500, 4000)); };
+      boe();
+      return { art: 'wind', ende: () => { lauf = false; luft.q.stop(); tief.q.stop(); } };
+    }
+    _wald() {
+      const c = this.ctx;
+      const laub = this._schleife(this.weiss, [['highpass', 1800], ['lowpass', 5200, 0.5]], 0.02);
+      const luft = this._schleife(this.rosa, [['bandpass', 350, 0.6]], 0.10);
+      let lauf = true;
+      const wehen = () => { if (!lauf) return; const t = c.currentTime; laub.g.gain.setTargetAtTime(zufall(0.006, 0.04), t, zufall(0.6, 1.6)); luft.g.gain.setTargetAtTime(zufall(0.05, 0.14), t, 1.5); setTimeout(wehen, zufall(1800, 4200)); };
+      wehen();
+      return { art: 'wald', ende: () => { lauf = false; laub.q.stop(); luft.q.stop(); } };
+    }
+    _feld() {
+      const c = this.ctx;
+      const luft = this._schleife(this.rosa, [['bandpass', 600, 0.5]], 0.07);
+      const flirren = this._schleife(this.weiss, [['bandpass', 5200, 4]], 0.005);
+      let lauf = true;
+      const wehen = () => { if (!lauf) return; luft.g.gain.setTargetAtTime(zufall(0.035, 0.11), c.currentTime, 1.8); setTimeout(wehen, zufall(2500, 5000)); };
+      wehen();
+      return { art: 'feld', ende: () => { lauf = false; luft.q.stop(); flirren.q.stop(); } };
+    }
+    _berg() {
+      const c = this.ctx;
+      const grund = this._schleife(this.braun, [['lowpass', 110, 0.7]], 0.45);
+      let lauf = true;
+      const tropfen = () => {
+        if (!lauf) return;
+        const t = c.currentTime + 0.02, f = zufall(900, 1400);
+        const o = c.createOscillator(); o.type = 'sine';
+        o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 1.7, t + 0.035);
+        const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(zufall(0.006, 0.014), t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+        const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600;
+        o.connect(lp); lp.connect(g);
+        if (c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = zufall(-0.7, 0.7); g.connect(p); p.connect(this.umgBus); } else g.connect(this.umgBus);
+        o.start(t); o.stop(t + 0.16);
+        setTimeout(tropfen, zufall(2500, 7500));
+      };
+      tropfen();
+      return { art: 'berg', ende: () => { lauf = false; grund.q.stop(); } };
     }
     _schleife(puffer, filter, gain) {
       const c = this.ctx;
